@@ -69,6 +69,11 @@
     border-bottom:3px solid var(--line);
     overflow:hidden;
   }
+  /* center the hero block on wide screens */
+  header .wrap{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    max-width:780px;
+  }
 
   /* animated star/pixel field */
   .stars{ position:absolute; inset:0; pointer-events:none; opacity:.5; }
@@ -106,7 +111,7 @@
   }
   .intro strong{ color:var(--ink); font-weight:700; }
 
-  .links{ display:flex; flex-wrap:wrap; gap:.8rem; }
+  .links{ display:flex; flex-wrap:wrap; gap:.8rem; justify-content:center; }
   .btn{
     font-family:'Press Start 2P',monospace;
     font-size:.62rem;
