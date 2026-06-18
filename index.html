@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tran The Manh — Game Programmer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Palette: CRT arcade dusk */
+    --bg:        #14101f;   /* deep indigo-black */
+    --panel:     #1d1830;   /* raised panel */
+    --ink:       #e8e3ff;   /* soft white text */
+    --dim:       #9a90c4;   /* muted lavender */
+    --line:      #322a4d;   /* hairline */
+    --magenta:   #ff4d9d;   /* primary accent */
+    --cyan:      #4df0ff;   /* secondary accent */
+    --gold:      #ffd34d;   /* highlight / stats */
+    --green:     #6bff95;   /* live / shipped */
+    --shadow-h:  4px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Space Grotesk',sans-serif;
+    line-height:1.6;
+    image-rendering:pixelated;
+    overflow-x:hidden;
+    /* subtle scanline texture */
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.015) 0px,
+        rgba(255,255,255,0.015) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  /* ---------- shared ---------- */
+  .wrap{ width:min(1040px, 92vw); margin:0 auto; }
+
+  .pixel-font{ font-family:'Press Start 2P',monospace; }
+  .mono{ font-family:'VT323',monospace; }
+
+  .eyebrow{
+    font-family:'Press Start 2P',monospace;
+    font-size:.6rem;
+    letter-spacing:.15em;
+    color:var(--cyan);
+    text-transform:uppercase;
+  }
+
+  /* ---------- hero ---------- */
+  header{
+    position:relative;
+    padding:5.5rem 0 4rem;
+    border-bottom:3px solid var(--line);
+    overflow:hidden;
+  }
+
+  /* animated star/pixel field */
+  .stars{ position:absolute; inset:0; pointer-events:none; opacity:.5; }
+  .stars span{
+    position:absolute; width:3px; height:3px; background:var(--cyan);
+    animation:twinkle 3s steps(2) infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.2} 50%{opacity:1} }
+
+  .hero-tag{ margin-bottom:1.4rem; }
+
+  h1.name{
+    font-family:'Press Start 2P',monospace;
+    font-size:clamp(1.6rem, 5.5vw, 3.4rem);
+    line-height:1.25;
+    color:var(--ink);
+    text-shadow:
+      var(--shadow-h) var(--shadow-h) 0 var(--magenta),
+      calc(var(--shadow-h)*2) calc(var(--shadow-h)*2) 0 rgba(77,240,255,.35);
+    margin-bottom:1.6rem;
+  }
+
+  .role{
+    font-family:'VT323',monospace;
+    font-size:clamp(1.4rem,3vw,2rem);
+    color:var(--gold);
+    letter-spacing:.02em;
+    margin-bottom:1.8rem;
+  }
+  .role .blink{ color:var(--green); animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink{ 50%{opacity:0} }
+
+  .intro{
+    max-width:60ch; color:var(--dim); font-size:1.05rem; margin-bottom:2.2rem;
+  }
+  .intro strong{ color:var(--ink); font-weight:700; }
+
+  .links{ display:flex; flex-wrap:wrap; gap:.8rem; }
+  .btn{
+    font-family:'Press Start 2P',monospace;
+    font-size:.62rem;
+    text-decoration:none;
+    color:var(--bg);
+    background:var(--cyan);
+    padding:.85rem 1.1rem;
+    border:0;
+    box-shadow:var(--shadow-h) var(--shadow-h) 0 #1a6b73;
+    transition:transform .08s, box-shadow .08s;
+    display:inline-block;
+  }
+  .btn:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 #1a6b73; }
+  .btn:active{ transform:translate(2px,2px); box-shadow:0 0 0 #1a6b73; }
+  .btn.alt{ background:var(--magenta); box-shadow:var(--shadow-h) var(--shadow-h) 0 #99315f; color:var(--ink); }
+  .btn.alt:hover{ box-shadow:6px 6px 0 #99315f; }
+  .btn.ghost{ background:transparent; color:var(--cyan); border:2px solid var(--cyan); box-shadow:none; }
+  .btn.ghost:hover{ background:var(--cyan); color:var(--bg); transform:translate(-2px,-2px); }
+  .btn:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+
+  /* ---------- stats strip ---------- */
+  .stats{
+    display:flex; flex-wrap:wrap; gap:0;
+    border-bottom:3px solid var(--line);
+    background:var(--panel);
+  }
+  .stat{
+    flex:1 1 150px; padding:1.5rem 1.2rem; text-align:center;
+    border-right:1px solid var(--line);
+  }
+  .stat:last-child{ border-right:0; }
+  .stat .num{ font-family:'Press Start 2P',monospace; font-size:1.3rem; color:var(--gold); display:block; margin-bottom:.5rem; }
+  .stat .lbl{ font-size:.85rem; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; }
+
+  /* ---------- sections ---------- */
+  section{ padding:4rem 0; border-bottom:3px solid var(--line); }
+  .sec-head{ display:flex; align-items:center; gap:1rem; margin-bottom:2.5rem; }
+  .sec-head h2{
+    font-family:'Press Start 2P',monospace; font-size:1rem; color:var(--ink);
+    white-space:nowrap;
+  }
+  .sec-head .rule{ flex:1; height:3px; background:repeating-linear-gradient(90deg,var(--line) 0 8px, transparent 8px 12px); }
+
+  /* ---------- project cards ---------- */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.6rem; }
+
+  .card{
+    background:var(--panel);
+    border:2px solid var(--line);
+    box-shadow:6px 6px 0 rgba(0,0,0,.4);
+    display:flex; flex-direction:column;
+    transition:transform .12s, border-color .12s;
+  }
+  .card:hover{ transform:translateY(-4px); border-color:var(--magenta); }
+
+  /* media placeholder — replace with your own <img>/<video> */
+  .shot{
+    aspect-ratio:16/10;
+    background:
+      repeating-conic-gradient(#241d3a 0% 25%, #2c2447 0% 50%) 50%/22px 22px;
+    border-bottom:2px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .shot .hint{
+    font-family:'VT323',monospace; font-size:1.1rem; color:var(--dim);
+    text-align:center; padding:1rem;
+  }
+  .shot .hint b{ color:var(--cyan); display:block; font-size:.85rem; font-family:'Press Start 2P',monospace; margin-bottom:.6rem; }
+  .shot img, .shot video{ width:100%; height:100%; object-fit:cover; }
+
+  .badge{
+    position:absolute; top:.7rem; left:.7rem;
+    font-family:'Press Start 2P',monospace; font-size:.5rem;
+    padding:.4rem .55rem; color:var(--bg);
+  }
+  .badge.shipped{ background:var(--green); }
+  .badge.solo{ background:var(--gold); }
+  .badge.ai{ background:var(--magenta); color:var(--ink); }
+
+  .card-body{ padding:1.4rem; display:flex; flex-direction:column; flex:1; }
+  .card h3{ font-family:'VT323',monospace; font-size:1.6rem; color:var(--ink); line-height:1.1; margin-bottom:.3rem; }
+  .card .stack{ font-family:'VT323',monospace; font-size:1.05rem; color:var(--cyan); margin-bottom:.9rem; }
+  .card p{ font-size:.93rem; color:var(--dim); margin-bottom:1rem; flex:1; }
+  .tags{ display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1.1rem; }
+  .tag{ font-family:'VT323',monospace; font-size:.95rem; color:var(--gold); border:1px solid var(--line); padding:.1rem .5rem; }
+  .card-links{ display:flex; gap:.6rem; flex-wrap:wrap; }
+  .card-links a{
+    font-family:'Press Start 2P',monospace; font-size:.5rem; text-decoration:none;
+    color:var(--cyan); border:2px solid var(--cyan); padding:.5rem .6rem;
+    transition:background .1s,color .1s;
+  }
+  .card-links a:hover{ background:var(--cyan); color:var(--bg); }
+  .card-links a:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
+
+  /* ---------- skills ---------- */
+  .skill-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.2rem; }
+  .skill-box{ background:var(--panel); border:2px solid var(--line); padding:1.3rem; }
+  .skill-box h4{ font-family:'Press Start 2P',monospace; font-size:.62rem; color:var(--magenta); margin-bottom:.9rem; }
+  .skill-box ul{ list-style:none; }
+  .skill-box li{ font-family:'VT323',monospace; font-size:1.15rem; color:var(--ink); padding:.15rem 0; }
+  .skill-box li::before{ content:"▸ "; color:var(--cyan); }
+
+  /* ---------- footer ---------- */
+  footer{ padding:3.5rem 0 4rem; text-align:center; }
+  footer .pixel-font{ font-size:.8rem; color:var(--gold); margin-bottom:1.3rem; }
+  footer .contact{ display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap; margin-bottom:2rem; }
+  footer .contact a{ color:var(--cyan); text-decoration:none; font-family:'VT323',monospace; font-size:1.3rem; }
+  footer .contact a:hover{ color:var(--magenta); text-decoration:underline; }
+  footer small{ color:var(--dim); font-family:'VT323',monospace; font-size:1rem; }
+
+  /* ---------- editing note ---------- */
+  .note{
+    background:#0e0b18; border:2px dashed var(--line); padding:1.1rem 1.3rem;
+    margin:2rem auto 0; font-family:'VT323',monospace; font-size:1.1rem; color:var(--dim);
+    width:min(1040px,92vw);
+  }
+  .note b{ color:var(--gold); }
+  .note code{ color:var(--cyan); background:#1d1830; padding:.05rem .35rem; }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header>
+  <div class="stars" id="stars" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="hero-tag"><span class="eyebrow">▶ Player 1 ready</span></div>
+    <h1 class="name">TRAN THE MANH</h1>
+    <p class="role">Unity / Gameplay Programmer<span class="blink">_</span></p>
+    <p class="intro">
+      CS student and game programmer with <strong>2+ years</strong> in Unity (C#) and C++.
+      I build gameplay systems, combat &amp; enemy AI, and reinforcement-learning agents —
+      and I've <strong>shipped puzzle titles to real players on Google Play</strong>.
+    </p>
+    <div class="links">
+      <a class="btn" href="#work">View Projects</a>
+      <a class="btn alt" href="https://github.com/tranmanh2004" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn ghost" href="mailto:manhsile@gmail.com">Contact</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ STATS ============ -->
+<div class="stats">
+  <div class="stat"><span class="num">2+</span><span class="lbl">Years coding games</span></div>
+  <div class="stat"><span class="num">500K+</span><span class="lbl">Downloads shipped</span></div>
+  <div class="stat"><span class="num">6</span><span class="lbl">Projects built</span></div>
+  <div class="stat"><span class="num">3.33</span><span class="lbl">GPA / 4.0</span></div>
+</div>
+
+<!-- ============ PROJECTS ============ -->
+<section id="work">
+  <div class="wrap">
+    <div class="sec-head"><h2>Projects</h2><span class="rule"></span></div>
+
+    <p class="note">
+      <b>↳ To add your media:</b> each card has a <code>&lt;div class="shot"&gt;</code>.
+      Replace the placeholder inside with <code>&lt;img src="your.gif"&gt;</code> or
+      <code>&lt;video src="clip.mp4" autoplay loop muted&gt;</code>. Put image files in the same folder.
+    </p>
+
+    <div class="grid" style="margin-top:1.6rem">
+
+      <!-- THE KNIGHT -->
+      <article class="card">
+        <div class="shot">
+          <span class="badge ai">AI / RL</span>
+          <div class="hint"><b>The Knight</b>drop gameplay GIF here</div>
+        </div>
+        <div class="card-body">
+          <h3>The Knight</h3>
+          <div class="stack">RL Agent · Roguelike</div>
+          <p>Trained a deep-RL agent (PPO via ML-Agents) to move, aim, dash and fight on its own
+             in a top-down Unity roguelike. Multi-branch action space and a 207-dim observation,
+             plus procedural levels with curriculum learning.</p>
+          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">ML-Agents</span><span class="tag">Python</span></div>
+          <div class="card-links">
+            <a href="https://github.com/tranmanh2004/The-Knight" target="_blank" rel="noopener">GitHub ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- UNBLOCKY -->
+      <article class="card">
+        <div class="shot">
+          <span class="badge shipped">Shipped</span>
+          <div class="hint"><b>Unblocky</b>drop gameplay GIF here</div>
+        </div>
+        <div class="card-body">
+          <h3>Unblocky — Color Jam</h3>
+          <div class="stack">Casual Puzzle · 500K+ downloads</div>
+          <p>Built UI, gameplay mechanics and internal tools for a slide-block puzzle.
+             Developed core block mechanics and A* pathfinding for block movement; supported
+             live updates and new level releases.</p>
+          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">A*</span><span class="tag">Firebase</span></div>
+          <div class="card-links">
+            <a href="https://play.google.com/store/apps/details?id=com.fc.sdk.block.escape" target="_blank" rel="noopener">Google Play ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- BRICK SAGA -->
+      <article class="card">
+        <div class="shot">
+          <span class="badge solo">Solo</span>
+          <div class="hint"><b>Brick Saga</b>drop gameplay GIF here</div>
+        </div>
+        <div class="card-body">
+          <h3>Brick Saga</h3>
+          <div class="stack">Block-Sorting Puzzle</div>
+          <p>Independently built a pixel-art block-sorting puzzle end-to-end — from core
+             mechanics to UI and release build. Tap-to-collect selection, three-tray sorting,
+             color-match clear logic and internal level tools.</p>
+          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">Firebase</span></div>
+          <div class="card-links">
+            <a href="https://play.google.com/store/apps/details?id=com.fc.brick.saga.sort.color" target="_blank" rel="noopener">Google Play ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- BLOCK JAM -->
+      <article class="card">
+        <div class="shot">
+          <span class="badge shipped">Shipped</span>
+          <div class="hint"><b>Block Jam</b>drop gameplay GIF here</div>
+        </div>
+        <div class="card-body">
+          <h3>Block Jam: Color Sorting</h3>
+          <div class="stack">Color-Sorting Puzzle</div>
+          <p>Developed gameplay systems, UI and level tools for a color-sorting block puzzle.
+             Tray-and-grid sorting mechanics with difficulty scaling and game-state management
+             across levels.</p>
+          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span></div>
+          <div class="card-links">
+            <a href="https://play.google.com/store/apps/details?id=com.fc.ball.jam.color.sort" target="_blank" rel="noopener">Google Play ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- BATISSEURS -->
+      <article class="card">
+        <div class="shot">
+          <div class="hint"><b>Bâtisseurs</b>drop gameplay GIF here</div>
+        </div>
+        <div class="card-body">
+          <h3>Bâtisseurs d'Espoir</h3>
+          <div class="stack">Story-Driven Educational</div>
+          <p>Built a narrative game where players lead a volunteer team to build schools.
+             Designed an item &amp; inventory system with ScriptableObjects, per-level minigames,
+             and optimized pooling/spawn logic. First Prize, Hackathon Jeu Parle Français 2025.</p>
+          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">🏆 1st Prize</span></div>
+          <div class="card-links">
+            <a href="https://github.com/TranThuy28/jeparlefrancais" target="_blank" rel="noopener">GitHub ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- THE CAT -->
+      <article class="card">
+        <div class="shot">
+          <span class="badge solo">Solo</span>
+          <div class="hint"><b>The Cat</b>drop gameplay GIF here</div>
+        </div>
+        <div class="card-body">
+          <h3>The Cat</h3>
+          <div class="stack">2D Boss-Battle · C++</div>
+          <p>A 2D pixel-art boss-battle game in C++ with real-time combat and animated sprites.
+             Responsive controls, dynamic difficulty, multi-phase boss patterns, and custom
+             menu / level-select UI.</p>
+          <div class="tags"><span class="tag">C++</span><span class="tag">Pixel-art</span></div>
+          <div class="card-links">
+            <a href="https://github.com/tranmanh2004/The_Cat" target="_blank" rel="noopener">GitHub ↗</a>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ SKILLS ============ -->
+<section id="skills">
+  <div class="wrap">
+    <div class="sec-head"><h2>Skills</h2><span class="rule"></span></div>
+    <div class="skill-grid">
+      <div class="skill-box">
+        <h4>Languages</h4>
+        <ul><li>C# (proficient)</li><li>C / C++ (proficient)</li><li>Python, Java (familiar)</li></ul>
+      </div>
+      <div class="skill-box">
+        <h4>Engine &amp; Tools</h4>
+        <ul><li>Unity</li><li>ScriptableObjects, Animator</li><li>UniTask, DOTween</li><li>Git, Unity Profiler</li></ul>
+      </div>
+      <div class="skill-box">
+        <h4>Gameplay Systems</h4>
+        <ul><li>Combat &amp; enemy AI</li><li>FSM / behaviour design</li><li>Inventory &amp; item systems</li><li>Object pooling &amp; spawning</li></ul>
+      </div>
+      <div class="skill-box">
+        <h4>AI / ML</h4>
+        <ul><li>Reinforcement Learning</li><li>PPO, ML-Agents</li><li>Procedural Generation</li><li>A* pathfinding</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <p class="pixel-font">★ GAME OVER · INSERT COIN TO CONTINUE ★</p>
+    <div class="contact">
+      <a href="mailto:manhsile@gmail.com">✉ manhsile@gmail.com</a>
+      <a href="tel:0355497922">☎ 0355 497 922</a>
+      <a href="https://github.com/tranmanh2004" target="_blank" rel="noopener">⌨ github.com/tranmanh2004</a>
+    </div>
+    <small>Hà Nội, Vietnam · Built with HTML &amp; CSS</small>
+  </div>
+</footer>
+
+<script>
+  // scatter twinkling pixels in the hero
+  (function(){
+    const field = document.getElementById('stars');
+    if(!field) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const n = 40;
+    for(let i=0;i<n;i++){
+      const s = document.createElement('span');
+      s.style.left = Math.random()*100 + '%';
+      s.style.top  = Math.random()*100 + '%';
+      s.style.background = Math.random() > .5 ? 'var(--cyan)' : 'var(--magenta)';
+      if(!reduce) s.style.animationDelay = (Math.random()*3) + 's';
+      field.appendChild(s);
+    }
+  })();
+</script>
+
+</body>
+</html>
