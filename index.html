@@ -174,17 +174,33 @@
       repeating-conic-gradient(#241d3a 0% 25%, #2c2447 0% 50%) 50%/22px 22px;
     border-bottom:2px solid var(--line);
     display:flex; align-items:center; justify-content:center;
-    position:relative;
+    position:relative; overflow:hidden;
   }
   .shot .hint{
     font-family:'VT323',monospace; font-size:1.1rem; color:var(--dim);
     text-align:center; padding:1rem;
   }
   .shot .hint b{ color:var(--cyan); display:block; font-size:.85rem; font-family:'Press Start 2P',monospace; margin-bottom:.6rem; }
-  .shot img, .shot video{ width:100%; height:100%; object-fit:cover; }
+  /* real screenshot: sharp & whole, floating over a blurred fill of itself */
+  .shot:has(img){ background:#13101f; }
+  .shot .shot-blur{           /* zoomed, heavily-blurred copy fills the empty sides */
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    filter:blur(30px) saturate(1.5) brightness(.9);
+    transform:scale(1.25);
+    z-index:0;
+  }
+  .shot .shot-img, .shot video{   /* the real, untouched screenshot */
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    image-rendering:pixelated;        /* keep pixel-art crisp */
+    z-index:1;
+  }
 
   .badge{
-    position:absolute; top:.7rem; left:.7rem;
+    position:absolute; top:.7rem; left:.7rem; z-index:2;
     font-family:'Press Start 2P',monospace; font-size:.5rem;
     padding:.4rem .55rem; color:var(--bg);
   }
@@ -268,18 +284,14 @@
   <div class="wrap">
     <div class="sec-head"><h2>Projects</h2><span class="rule"></span></div>
 
-    <p class="note">
-      <b>↳ To add your media:</b> each card has a <code>&lt;div class="shot"&gt;</code>.
-      Replace the placeholder inside with <code>&lt;img src="your.gif"&gt;</code> or
-      <code>&lt;video src="clip.mp4" autoplay loop muted&gt;</code>. Put image files in the same folder.
-    </p>
-
     <div class="grid" style="margin-top:1.6rem">
 
       <!-- THE KNIGHT -->
       <article class="card">
         <div class="shot">
           <span class="badge ai">AI / RL</span>
+          <img class="shot-blur" src="images/TheKnight.png" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">
+          <img class="shot-img" src="images/TheKnight.png" alt="The Knight gameplay" loading="lazy" onerror="this.remove()">
           <div class="hint"><b>The Knight</b>drop gameplay GIF here</div>
         </div>
         <div class="card-body">
@@ -299,6 +311,8 @@
       <article class="card">
         <div class="shot">
           <span class="badge shipped">Shipped</span>
+          <img class="shot-blur" src="images/unblocky.png" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">
+          <img class="shot-img" src="images/unblocky.png" alt="Unblocky gameplay" loading="lazy" onerror="this.remove()">
           <div class="hint"><b>Unblocky</b>drop gameplay GIF here</div>
         </div>
         <div class="card-body">
@@ -307,7 +321,7 @@
           <p>Built UI, gameplay mechanics and internal tools for a slide-block puzzle.
              Developed core block mechanics and A* pathfinding for block movement; supported
              live updates and new level releases.</p>
-          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">A*</span><span class="tag">Firebase</span></div>
+          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span></div>
           <div class="card-links">
             <a href="https://play.google.com/store/apps/details?id=com.fc.sdk.block.escape" target="_blank" rel="noopener">Google Play ↗</a>
           </div>
@@ -318,6 +332,8 @@
       <article class="card">
         <div class="shot">
           <span class="badge solo">Solo</span>
+          <img class="shot-blur" src="images/Brick.png" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">
+          <img class="shot-img" src="images/Brick.png" alt="Brick Saga gameplay" loading="lazy" onerror="this.remove()">
           <div class="hint"><b>Brick Saga</b>drop gameplay GIF here</div>
         </div>
         <div class="card-body">
@@ -326,7 +342,7 @@
           <p>Independently built a pixel-art block-sorting puzzle end-to-end — from core
              mechanics to UI and release build. Tap-to-collect selection, three-tray sorting,
              color-match clear logic and internal level tools.</p>
-          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">Firebase</span></div>
+          <div class="tags"><span class="tag">Unity</span><span class="tag">C#</span></div>
           <div class="card-links">
             <a href="https://play.google.com/store/apps/details?id=com.fc.brick.saga.sort.color" target="_blank" rel="noopener">Google Play ↗</a>
           </div>
@@ -337,6 +353,8 @@
       <article class="card">
         <div class="shot">
           <span class="badge shipped">Shipped</span>
+          <img class="shot-blur" src="images/BallJam.png" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">
+          <img class="shot-img" src="images/BallJam.png" alt="Block Jam gameplay" loading="lazy" onerror="this.remove()">
           <div class="hint"><b>Block Jam</b>drop gameplay GIF here</div>
         </div>
         <div class="card-body">
@@ -355,6 +373,8 @@
       <!-- BATISSEURS -->
       <article class="card">
         <div class="shot">
+          <img class="shot-blur" src="images/batisseurs.png" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">
+          <img class="shot-img" src="images/batisseurs.png" alt="Bâtisseurs d'Espoir gameplay" loading="lazy" onerror="this.remove()">
           <div class="hint"><b>Bâtisseurs</b>drop gameplay GIF here</div>
         </div>
         <div class="card-body">
@@ -374,6 +394,8 @@
       <article class="card">
         <div class="shot">
           <span class="badge solo">Solo</span>
+          <img class="shot-blur" src="images/Thecat.png" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">
+          <img class="shot-img" src="images/Thecat.png" alt="The Cat gameplay" loading="lazy" onerror="this.remove()">
           <div class="hint"><b>The Cat</b>drop gameplay GIF here</div>
         </div>
         <div class="card-body">
@@ -382,7 +404,7 @@
           <p>A 2D pixel-art boss-battle game in C++ with real-time combat and animated sprites.
              Responsive controls, dynamic difficulty, multi-phase boss patterns, and custom
              menu / level-select UI.</p>
-          <div class="tags"><span class="tag">C++</span><span class="tag">Pixel-art</span></div>
+          <div class="tags"><span class="tag">C++</span></div>
           <div class="card-links">
             <a href="https://github.com/tranmanh2004/The_Cat" target="_blank" rel="noopener">GitHub ↗</a>
           </div>
